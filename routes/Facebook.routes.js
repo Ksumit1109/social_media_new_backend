@@ -1,12 +1,10 @@
 const express = require("express");
 const router = express.Router();
-const Controller = require("../controllers/Review.controller");
+const Controller = require("../controllers/Facebook.controller");
 
-router.post("/create-review", Controller.createReview);
-router.patch("/edit-review", Controller.editReview);
-router.get("/get-all-reviews", Controller.getAllReview);
-router.get("/get-review-by-id/:id", Controller.getReviewById);
-router.delete("/delete/:reviewId", Controller.deleteReview);
-router.get("/search", Controller.searchReviews);
+router.post("/info", Controller.info);
+router.post("/download", Controller.download);
+router.post("/video", Controller.video);
+router.post("/watch", Controller.watch);
 
 module.exports = router;
