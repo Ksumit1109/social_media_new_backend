@@ -1,197 +1,210 @@
-const Review = require("../models/Review.model");
 
-exports.createReview = async (req, res) => {
+const {YtDlp} = require("ytdlp-nodejs")
+const ytdlp = new YtDlp();
+
+exports.info = async (req, res) => {
   try {
-    let { name, comment } = req.body;
+    const { url } = req.body;
+    
+    console.log('🎵 [TikTok INFO] User requested info for URL:', url);
+    
+    if (!url) {
+      console.log('❌ [TikTok INFO] No URL provided');
+      return res.status(400).json({ error: 'URL is required' });
+    }
 
-    let review = new Review({
-      name,
-      comment,
+    if (!url.includes('tiktok.com')) {
+      console.log('❌ [TikTok INFO] Invalid TikTok URL:', url);
+      return res.status(400).json({ error: 'Please provide a valid TikTok URL' });
+    }
+
+    console.log('📡 [TikTok INFO] Fetching content information...');
+    
+    const info = await ytdlp.getInfoAsync(url);
+
+    console.log('✅ [TikTok INFO] Successfully fetched content info:', {
+      title: info.title || 'TikTok Content',
+      uploader: info.uploader || info.channel
     });
-    review = await review.save();
-    return res.status(201).json({
-      errorcode: 0,
-      status: true,
-      message: "review added successfully",
-      data: null,
+
+    const formatOptions = [
+      { format_id: 'best', ext: 'mp4', quality: 'Best Quality', format_note: 'Best available quality' },
+      { format_id: 'worst', ext: 'mp4', quality: 'Lower Quality', format_note: 'Smaller file size' },
+      { format_id: 'bestaudio', ext: 'mp3', quality: 'Audio Only', format_note: 'Audio Only (MP3)' }
+    ];
+
+    console.log('📋 [TikTok INFO] Available formats:', formatOptions.map(f => f.quality));
+
+    res.json({
+      title: info.title || 'TikTok Content',
+      uploader: info.uploader || info.channel,
+      duration: info.duration,
+      thumbnail: info.thumbnail,
+      description: info.description ? info.description.substring(0, 200) : '',
+      formats: formatOptions
     });
   } catch (error) {
-    return res.status(204).json({
-      errorcode: 5,
-      status: false,
-      message: error.message,
-      data: error,
-    });
+    console.error('❌ [TikTok INFO] Error getting TikTok info:', error.message);
+    res.status(500).json({ error: 'Failed to get TikTok content information: ' + error.message });
   }
 };
 
-exports.editReview = async (req, res) => {
+
+exports.download = async (req, res) => {
   try {
-    let { id, name, comment } = req.body;
-    if (!id)
-      return res.status(207).json({
-        errorcode: 1,
-        status: false,
-        message: "Id should present",
-        data: null,
+    const { url, format_id } = req.body;
+    
+    console.log('⬇️ [TikTok DOWNLOAD] User requested download:', { url, format_id });
+    
+    if (!url) {
+      console.log('❌ [TikTok DOWNLOAD] No URL provided');
+      return res.status(400).json({ error: 'TikTok URL is required' });
+    }
+
+    if (!url.includes('tiktok.com')) {
+      console.log('❌ [TikTok DOWNLOAD] Invalid TikTok URL:', url);
+      return res.status(400).json({ error: 'Please provide a valid TikTok URL' });
+    }
+
+    console.log('📡 [TikTok DOWNLOAD] Getting content info...');
+    const info = await ytdlp.getInfoAsync(url);
+
+    const safeTitle = (info.title || 'TikTok_Content').replace(/[^a-zA-Z0-9\s\-_]/g, '').substring(0, 50);
+    
+    console.log('🎵 [TikTok DOWNLOAD] Starting download:', {
+      title: info.title,
+      format: format_id || 'best'
+    });
+
+    // Set appropriate content type based on format
+    if (format_id === 'bestaudio') {
+      res.setHeader('Content-Type', 'audio/mpeg');
+      res.setHeader('Content-Disposition', `attachment; filename="${safeTitle}.mp3"`);
+    } else {
+      res.setHeader('Content-Type', 'application/octet-stream');
+      res.setHeader('Content-Disposition', `attachment; filename="${safeTitle}.mp4"`);
+    }
+
+    console.log('🚀 [TikTok DOWNLOAD] Starting download process...');
+
+    try {
+      const downloadOptions = format_id === 'bestaudio' ? {
+        format: 'bestaudio',
+        extractAudio: true,
+        audioFormat: 'mp3',
+        output: '-'
+      } : {
+        format: format_id || 'best',
+        output: '-'
+      };
+      
+      const childProcess = ytdlp.exec(url, downloadOptions);
+      
+      childProcess.stdout?.pipe(res);
+      
+      childProcess.on('close', (code) => {
+        console.log(`✅ [TikTok DOWNLOAD] Download completed with code: ${code}`);
       });
-
-    let editReview = await Review.findById(id);
-    if (!editReview)
-      return res.status(207).json({
-        errorcode: 2,
-        status: false,
-        message: "Review not found",
-        data: null,
+      
+      childProcess.on('error', (error) => {
+        console.error('❌ [TikTok DOWNLOAD] Process error:', error);
+        if (!res.headersSent) {
+          res.status(500).json({ error: 'Download failed: ' + error.message });
+        }
       });
-
-    editReview.name = name ? name : editReview.name;
-    editReview.comment = comment ? comment : editReview.comment;
-
-    await editReview.save();
-
-    return res.status(201).json({
-      errorcode: 0,
-      status: false,
-      message: "Review Edit Successfully",
-      data: editReview,
-    });
-  } catch (error) {
-    console.log("Error:", error);
-    return res.status(500).json({
-      errorcode: 5,
-      status: false,
-      message: "Internal server error",
-      data: error,
-    });
-  }
-};
-
-exports.getAllReview = async (req, res) => {
-  try {
-    const { page = 1, limit = 10 } = req.query;
-
-    let reviewList = await Review.find({})
-      .sort({ created_ts: -1 })
-      .skip((page - 1) * limit)
-      .limit(parseInt(limit));
-
-    const totalReviews = await Review.countDocuments({});
-
-    return res.status(200).json({
-      errorcode: 0,
-      status: true,
-      message: "Get all reviews successfully",
-      data: reviewList,
-      total: totalReviews,
-      page: parseInt(page),
-      pages: Math.ceil(totalReviews / limit),
-    });
-  } catch (error) {
-    return res.status(204).json({
-      errorcode: 5,
-      status: false,
-      message: error.message,
-      data: error,
-    });
-  }
-};
-
-exports.getReviewById = async (req, res) => {
-  try {
-    let { id } = req.params;
-
-    let review = await Review.findOne({ _id: id });
-    if (!review)
-      return res.status(404).json({
-        errorcode: 2,
-        status: true,
-        message: "Review Id not found",
-        data: null,
+      
+      childProcess.stderr?.on('data', (data) => {
+        console.log('📊 [TikTok DOWNLOAD] Progress:', data.toString().trim());
       });
+    } catch (execError) {
+      console.error('❌ [TikTok DOWNLOAD] Failed to start download:', execError);
+      if (!res.headersSent) {
+        res.status(500).json({ error: 'Failed to start download: ' + execError.message });
+      }
+    }
 
-    return res.status(200).json({
-      errorcode: 0,
-      status: true,
-      message: "Get Review Successfully by Id",
-      data: review,
-    });
   } catch (error) {
-    console.log("error", error.message);
-    return res.status(500).json({
-      errorcode: 5,
-      status: false,
-      message: "Internal server error",
-      data: error,
-    });
+    console.error('❌ [TikTok DOWNLOAD] Error:', error.message);
+    if (!res.headersSent) {
+      res.status(500).json({ error: 'Failed to download TikTok content: ' + error.message });
+    }
   }
-};
+}
 
-exports.deleteReview = async (req, res) => {
+
+exports.long = async (req, res) => {
   try {
-    let { reviewId } = req.params;
-    if (!reviewId)
-      return res.status(403).json({
-        errorcode: 2,
-        status: false,
-        message: "Review id should be present",
-        data: null,
-      });
+    const { url, format } = req.body;
+    
+    if (!url) {
+      return res.status(400).json({ error: 'TikTok Long Video URL is required' });
+    }
 
-    let reviews = await Review.findById({ _id: reviewId });
-    if (!reviews)
-      return res.status(404).json({
-        errorcode: 2,
-        status: false,
-        message: "Review not found",
-        data: null,
-      });
-
-    await Review.deleteOne({ _id: reviewId });
-    return res.status(200).json({
-      errorcode: 0,
-      status: true,
-      message: "Review deleted successfully",
-      data: null,
+    res.status(200).json({ 
+      message: 'TikTok Long download would start here',
+      url,
+      format: format || 'best'
     });
   } catch (error) {
-    console.log("error", error.message);
-    return res.status(500).json({
-      errorcode: 5,
-      status: false,
-      message: "Internal server error",
-      data: error,
-    });
+    console.error('Error downloading TikTok Long:', error);
+    res.status(500).json({ error: 'Failed to download TikTok Long video' });
   }
-};
+}
 
-exports.searchReviews = async (req, res) => {
+
+exports.general = async (req, res) => {
   try {
-    const { q, page = 1, limit = 10 } = req.query;
-    const query = {
-      $or: [{ name: { $regex: q, $options: "i" } }],
-    };
-    const reviews = await Review.find(query)
-      .skip((page - 1) * limit)
-      .limit(Number(limit))
-      .sort({ created_ts: -1 });
+    const { url, format } = req.body;
+    
+    if (!url) {
+      return res.status(400).json({ error: 'TikTok Video URL is required' });
+    }
 
-    const total = await Review.countDocuments(query);
-
-    return res.status(200).json({
-      errorcode: 0,
-      status: true,
-      message: "Search Reviews Successfully",
-      data: reviews,
-      total,
+    res.status(200).json({ 
+      message: 'TikTok Video download would start here',
+      url,
+      format: format || 'best'
     });
   } catch (error) {
-    console.log("error", error.message);
-    return res.status(500).json({
-      errorcode: 5,
-      status: false,
-      message: "Server error",
-      data: error.message,
-    });
+    console.error('Error downloading TikTok Video:', error);
+    res.status(500).json({ error: 'Failed to download TikTok video' });
   }
-};
+}
+
+
+exports.long = async (req, res) => {
+  try {
+    const { url, format } = req.body;
+    
+    if (!url) {
+      return res.status(400).json({ error: 'TikTok Long Video URL is required' });
+    }
+
+    res.status(200).json({ 
+      message: 'TikTok Long download would start here',
+      url,
+      format: format || 'best'
+    });
+  } catch (error) {
+    console.error('Error downloading TikTok Long:', error);
+    res.status(500).json({ error: 'Failed to download TikTok Long video' });
+  }
+}
+
+exports.audio = async (req, res) => {
+  try {
+    const { url } = req.body;
+    
+    if (!url) {
+      return res.status(400).json({ error: 'TikTok URL is required' });
+    }
+
+    res.status(200).json({ 
+      message: 'TikTok Audio download would start here',
+      url
+    });
+  } catch (error) {
+    console.error('Error downloading TikTok Audio:', error);
+    res.status(500).json({ error: 'Failed to download TikTok audio' });
+  }
+}
