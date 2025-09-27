@@ -1,5 +1,6 @@
 node_modules/
-yarn.lock
+# yarn.lock  # Remove this if using Yarn (commit it instead)
+# or add package-lock.json if using npm
 TEMP.js
 dist/
 
@@ -17,9 +18,8 @@ dist/
 
 # Maven
 target/
-dist/
 uploads/
-middlewares/localfile-upload.js
+# middlewares/localfile-upload.js  # Only ignore if it contains sensitive info
 
 # JetBrains IDE
 .idea/
@@ -45,4 +45,6 @@ Thumbs.db
 *.flv
 *.mov
 *.wmv
-# .env
+
+# Environment variables
+.env

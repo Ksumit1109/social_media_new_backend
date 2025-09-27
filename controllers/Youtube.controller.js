@@ -1,6 +1,26 @@
+const { YtDlp } = require("ytdlp-nodejs");
+const path = require("path");
+const os = require("os");
+const fs = require("fs");
 
-const {YtDlp} = require("ytdlp-nodejs")
-const ytdlp = new YtDlp();
+// Determine the correct binary path based on the platform
+let binaryPath;
+if (os.platform() === 'win32') {
+    binaryPath = path.join(__dirname, "..", "bin", "yt-dlp.exe");
+} else {
+    binaryPath = path.join(__dirname, "..", "bin", "yt-dlp_linux");
+}
+
+// Check if binary exists
+if (!fs.existsSync(binaryPath)) {
+    console.error(`❌ Binary not found at: ${binaryPath}`);
+    console.error("Please download the correct binary for your platform and place it in the bin directory");
+    process.exit(1);
+}
+
+const ytdlp = new YtDlp({
+    binaryPath: binaryPath
+});
 
 exports.info = async (req, res) => {
   try {
@@ -128,7 +148,6 @@ exports.download = async (req, res) => {
   }
 }
 
-
 exports.playListInfo = async (req, res) => {
   try {
     const { url } = req.body;
@@ -191,7 +210,6 @@ exports.playListInfo = async (req, res) => {
     res.status(500).json({ error: 'Failed to get playlist information: ' + error.message });
   }
 }
-
 
 exports.playListDownload = async (req, res) => {
   try {
@@ -260,7 +278,6 @@ exports.playListDownload = async (req, res) => {
     }
   }
 }
-
 
 exports.mp3 = async (req, res) => {
   try {
