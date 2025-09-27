@@ -1,0 +1,38 @@
+{
+  "name": "patientifi_backend",
+  "version": "1.0.0",
+  "description": "Patientifi Backend",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "nodemon index.js"
+  },
+  "author": "himanshu sharma",
+  "license": "ISC",
+  "dependencies": {
+    "aws-sdk": "^2.1412.0",
+    "axios": "^1.6.2",
+    "bcryptjs": "^2.4.3",
+    "body-parser": "^1.20.2",
+    "cookie-parser": "^1.4.6",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "express-validator": "^7.0.1",
+    "jsonwebtoken": "^9.0.1",
+    "moment": "^2.30.1",
+    "mongoose": "^7.3.2",
+    "multer": "^1.4.4",
+    "multer-s3": "^2.10.0",
+    "multer-sharp-s3": "^0.2.5",
+    "node-fetch": "^3.3.2",
+    "node-mailjet": "^6.0.2",
+    "nodemon": "^2.0.22",
+    "razorpay": "^2.9.3",
+    "sharp": "^0.31.3",
+    "shortid": "^2.2.16",
+    "stopword": "^3.0.1",
+    "unirest": "^0.6.0",
+    "ytdlp-nodejs": "^2.3.4"
+  }
+}
