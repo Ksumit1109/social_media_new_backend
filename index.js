@@ -4,10 +4,10 @@ const cors = require("cors");
 const bodyParser = require("body-parser");
 const app = express();
 const reviewRouter = require("./routes/Review.routes.js");
-const YoutubeRoutes = require("./routes/Review.routes.js");
-const InstagramRoutes = require("./routes/Review.routes.js");
-const FacebookRoutes = require("./routes/Review.routes.js");
-const TiktokRoutes = require("./routes/Review.routes.js");
+const YoutubeRoutes = require("./routes/Youtube.routes.js");
+const InstagramRoutes = require("./routes/Instagram.routes.js");
+const FacebookRoutes = require("./routes/Facebook.routes.js");
+const TiktokRoutes = require("./routes/Tiktok.routes.js");
 (express.json());
 app.use(cors());
 

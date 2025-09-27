@@ -1,5 +1,5 @@
 
-import {YtDlp} from "ytdlp-nodejs"
+const {YtDlp} = require("ytdlp-nodejs")
 const ytdlp = new YtDlp();
 
 exports.info = async (req, res) => {

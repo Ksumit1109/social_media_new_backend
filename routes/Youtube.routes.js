@@ -3,10 +3,10 @@ const router = express.Router();
 const Controller = require("../controllers/Youtube.controller");
 
 router.post("/info", Controller.info);
-router.patch("/download", Controller.download);
-router.get("/playlist/info", Controller.playListInfo);
-router.get("/playlist/download", Controller.playListDownload);
-router.delete("/mp3", Controller.mp3);
-router.get("/shorts", Controller.shorts);
+router.post("/download", Controller.download);
+router.post("/playlist/info", Controller.playListInfo);
+router.post("/playlist/download", Controller.playListDownload);
+router.post("/mp3", Controller.mp3);
+router.post("/shorts", Controller.shorts);
 
 module.exports = router;
