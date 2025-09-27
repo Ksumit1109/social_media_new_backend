@@ -17,7 +17,7 @@ app.use(bodyParser.json());
 // Routes
 app.use("/api/review", reviewRouter);
 app.use('/api/youtube', YoutubeRoutes);
-// app.use('/api/instagram', InstagramRoutes);
+app.use('/api/instagram', InstagramRoutes);
 app.use('/api/facebook', FacebookRoutes);
 app.use('/api/tiktok', TiktokRoutes);
 
