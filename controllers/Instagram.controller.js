@@ -1,7 +1,27 @@
-
-const {YtDlp} = require("ytdlp-nodejs")
-const ytdlp = new YtDlp();
+const { YtDlp } = require("ytdlp-nodejs");
+const path = require("path");
+const os = require("os");
+const fs = require("fs");
 const fetch = globalThis.fetch || require('node-fetch');
+
+// Determine the correct binary path based on the platform
+let binaryPath;
+if (os.platform() === 'win32') {
+    binaryPath = path.join(__dirname, "..", "bin", "yt-dlp.exe");
+} else {
+    binaryPath = path.join(__dirname, "..", "bin", "yt-dlp_linux");
+}
+
+// Check if binary exists
+if (!fs.existsSync(binaryPath)) {
+    console.error(`❌ Binary not found at: ${binaryPath}`);
+    console.error("Please download the correct binary for your platform and place it in the bin directory");
+    process.exit(1);
+}
+
+const ytdlp = new YtDlp({
+    binaryPath: binaryPath
+});
 
 // RapidAPI configuration
 const RAPIDAPI_KEY = 'fed10327bamsh5b07481a8d4b2d1p1f2993jsne736f5f9efe7';
