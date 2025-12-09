@@ -1,13 +1,13 @@
 {
-  "name": "patientifi_backend",
+  "name": "social_media_backend",
   "version": "1.0.0",
-  "description": "Patientifi Backend",
+  "description": "Social media Backend",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "nodemon index.js"
   },
-  "author": "himanshu sharma",
+  "author": "sumit",
   "license": "ISC",
   "dependencies": {
     "aws-sdk": "^2.1412.0",
